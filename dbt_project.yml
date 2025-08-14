@@ -1,0 +1,17 @@
+name: 'mini_portfolio'
+version: '1.0'
+profile: 'mini_portfolio'
+
+model-paths: ['models']
+seed-paths: ['seeds']
+target-path: 'target'
+clean-targets: ['target', 'dbt_packages']
+
+models:
+  mini_portfolio:
+    +materialized: view
+
+seeds:
+  +schema: raw
+  +full_refresh: true
+

@@ -1,0 +1,9 @@
+# Copy this to ~/.dbt/profiles.yml and update the path
+mini_portfolio:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # Replace with the absolute path on your machine:
+      path: /Users/<YOUR_MAC_USERNAME>/Desktop/mini_portfolio/data/portfolio.duckdb
+      threads: 4

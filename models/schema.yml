@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: main_raw      # where dbt seeded your CSVs
+    tables:
+      - name: orders
+      - name: customers
+
+models:
+  - name: stg_orders
+    description: "Cleaned orders from raw source"
+    columns:
+      - name: order_id
+        tests: [not_null, unique]
+      - name: customer_id
+        tests: [not_null]
