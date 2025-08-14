@@ -1,0 +1,47 @@
+name: dbt (duckdb)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  run-dbt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dbt + DuckDB
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install dbt-core dbt-duckdb duckdb
+
+      - name: Configure dbt profile (DuckDB)
+        run: |
+          mkdir -p ~/.dbt
+          cp profiles_example.yml ~/.dbt/profiles.yml
+
+      - name: Seed
+        run: |
+          source .venv/bin/activate
+          dbt seed
+
+      - name: Run + Test (staging)
+        run: |
+          source .venv/bin/activate
+          dbt run -s stg_orders
+          dbt test -s stg_orders
+
+      - name: (Optional) Build incremental model
+        run: |
+          source .venv/bin/activate
+          dbt build -s fct_orders_incremental || true
