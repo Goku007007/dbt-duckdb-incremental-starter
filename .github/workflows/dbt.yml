@@ -20,28 +20,32 @@ jobs:
 
       - name: Install dbt + DuckDB
         run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install --upgrade pip
-          pip install dbt-core dbt-duckdb duckdb
+          python -m pip install --upgrade pip
+          python -m pip install dbt-core dbt-duckdb duckdb
 
-      - name: Configure dbt profile (DuckDB)
+      - name: Configure dbt profile (CI DuckDB path)
         run: |
-          mkdir -p ~/.dbt
-          cp profiles_example.yml ~/.dbt/profiles.yml
+          mkdir -p ~/.dbt "${GITHUB_WORKSPACE}/data"
+          cat > ~/.dbt/profiles.yml <<EOF
+          mini_portfolio:
+            target: ci
+            outputs:
+              ci:
+                type: duckdb
+                path: ${GITHUB_WORKSPACE}/data/ci.duckdb
+                threads: 4
+          EOF
 
-      - name: Seed
-        run: |
-          source .venv/bin/activate
-          dbt seed
+      - name: Debug profile
+        run: dbt debug --profiles-dir ~/.dbt
+
+      - name: Seed (full refresh for idempotency)
+        run: dbt seed --profiles-dir ~/.dbt --full-refresh
 
       - name: Run + Test (staging)
         run: |
-          source .venv/bin/activate
-          dbt run -s stg_orders
-          dbt test -s stg_orders
+          dbt run  --profiles-dir ~/.dbt -s stg_orders
+          dbt test --profiles-dir ~/.dbt -s stg_orders
 
-      - name: (Optional) Build incremental model
-        run: |
-          source .venv/bin/activate
-          dbt build -s fct_orders_incremental || true
+      - name: Build incremental model (optional)
+        run: dbt build --profiles-dir ~/.dbt -s fct_orders_incremental
